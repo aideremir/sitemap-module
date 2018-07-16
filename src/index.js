@@ -17,7 +17,8 @@ const defaults = {
   exclude: [],
   routes: [],
   cacheTime: 1000 * 60 * 15,
-  gzip: false
+  gzip: false,
+  index: false
 }
 
 module.exports = function module (moduleOptions) {
@@ -79,13 +80,13 @@ module.exports = function module (moduleOptions) {
           // Generate static sitemap.xml
           const routes = await cache.get('routes')
           const sitemap = await createSitemap(options, routes)
-          const xml = await sitemap.toXML()
-          await fs.ensureFile(xmlGeneratePath)
-          await fs.writeFile(xmlGeneratePath, xml)
-          if (options.gzip) {
-            const gzip = await sitemap.toGzip()
-            await fs.writeFile(gzipGeneratePath, gzip)
-          }
+          // const xml = await sitemap.toXML()
+          // await fs.ensureFile(xmlGeneratePath)
+          // await fs.writeFile(xmlGeneratePath, xml)
+          // if (options.gzip) {
+          //   const gzip = await sitemap.toGzip()
+          //   await fs.writeFile(gzipGeneratePath, gzip)
+          // }
         })()
       }
     }
@@ -111,20 +112,20 @@ module.exports = function module (moduleOptions) {
   }
 
   // Add server middleware for sitemap.xml
-  this.addServerMiddleware({
-    path: options.path,
-    handler (req, res, next) {
-      cache.get('routes')
-        .then(routes => createSitemap(options, routes, req))
-        .then(sitemap => sitemap.toXML())
-        .then(xml => {
-          res.setHeader('Content-Type', 'application/xml')
-          res.end(xml)
-        }).catch(err => {
-          next(err)
-        })
-    }
-  })
+  // this.addServerMiddleware({
+  //   path: options.path,
+  //   handler (req, res, next) {
+  //     cache.get('routes')
+  //       .then(routes => createSitemap(options, routes, req))
+  //       .then(sitemap => sitemap.toXML())
+  //       .then(xml => {
+  //         res.setHeader('Content-Type', 'application/xml')
+  //         res.end(xml)
+  //       }).catch(err => {
+  //         next(err)
+  //       })
+  //   }
+  // })
 }
 
 // Initialize a AsyncCache instance for
@@ -161,11 +162,17 @@ function createSitemap (options, routes, req) {
   // Set cacheTime
   sitemapConfig.cacheTime = options.cacheTime || 0
 
-  // Create promisified instance and return
-  const sitemap = sm.createSitemap(sitemapConfig)
-  sitemap.toXML = promisify(sitemap.toXML)
+  sitemapConfig.sitemapName = 'sitemap'
+  sitemapConfig.sitemapSize = 100
+  sitemapConfig.targetFolder = 'static'
 
-  return sitemap
+  // Create promisified instance and return
+  // const sitemap = sm.createSitemap(sitemapConfig)
+  const sitemap = sm.createSitemapIndex(sitemapConfig)
+  fs.rename('static/sitemap-index.xml', 'static/sitemap.xml')
+  //sitemap.toXML = promisify(sitemap.toXML)
+
+  //return sitemap
 }
 
 // Borrowed from nuxt/common/utils
