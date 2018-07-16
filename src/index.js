@@ -17,8 +17,7 @@ const defaults = {
   exclude: [],
   routes: [],
   cacheTime: 1000 * 60 * 15,
-  gzip: false,
-  index: false
+  gzip: false
 }
 
 module.exports = function module (moduleOptions) {
@@ -34,8 +33,8 @@ module.exports = function module (moduleOptions) {
   const gzipGeneratePath = path.resolve(this.options.srcDir, path.join('static', options.pathGzip))
 
   // Ensure no generated file exists
-  fs.removeSync(xmlGeneratePath)
-  fs.removeSync(gzipGeneratePath)
+  // fs.removeSync(xmlGeneratePath)
+  // fs.removeSync(gzipGeneratePath)
 
   let staticRoutes = fs.readJsonSync(jsonStaticRoutesPath, { throws: false })
   let cache = null
@@ -162,9 +161,9 @@ function createSitemap (options, routes, req) {
   // Set cacheTime
   sitemapConfig.cacheTime = options.cacheTime || 0
 
-  sitemapConfig.sitemapName = 'sitemap'
-  sitemapConfig.sitemapSize = 100
-  sitemapConfig.targetFolder = 'static'
+  sitemapConfig.sitemapName = options.sitemapName || 'sitemap'
+  sitemapConfig.sitemapSize = options.sitemapSize || 1000
+  sitemapConfig.targetFolder = options.targetFolder || 'static'
 
   // Create promisified instance and return
   // const sitemap = sm.createSitemap(sitemapConfig)
